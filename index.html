@@ -1,0 +1,225 @@
+<!--MS Paint on HTML-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Paint</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+        * {
+            margin:0;
+            padding:0;
+        }
+        body {
+            overflow:hidden;
+        }
+        .myWindow {
+            height:1080px;
+            
+        }
+        .sidePane {
+            border-right:2px solid #999;
+            height:1080px;
+            width:100px;
+            display: grid;
+            grid-template-rows: 1fr 4fr;
+            grid-row-gap: 1em;
+            background:#999;
+            position: fixed;
+            padding-top: 20px;
+
+        }
+        .toolBox {
+            display:grid;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+        .toolBox > div {
+            display:grid;
+            justify-items:center;
+            align-items:center;
+        }
+        .palette {
+            margin:15px;
+            
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            
+        }
+        .palette > a {
+            display: grid;
+            justify-items:center;
+            align-items: center;
+        }
+        
+        .sidePane > div {
+            background:#999;
+        }
+        
+        a {
+            text-decoration: none;
+            color:white;
+        }
+        .inputHere {
+            margin:50px 0;
+            display: grid;
+
+            justify-items:center;
+            align-items: center;
+        }
+        input[name='colorCode'] {
+            width:70%;
+            padding:8px 3px;
+            border:2px solid grey;
+        }
+        input[name='colorCode']:focus {
+            
+            border:2px solid black;
+            transition: 0.9s;
+        }
+        .colorBox {
+            width:30px;
+            height:30px;
+            margin:1px;
+
+        }
+        .mainArea {
+            background: white;
+        }
+        .credits {
+        	position: fixed;
+        	bottom:0;
+        	right:0;
+        	background:black;
+        	color:white;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/f410a16b22.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="myWindow">
+        <div class='sidePane'>
+            <div class='toolBox'>
+                <div><a href="#" onclick='updateStyle("pen");updateChoice("black");'><i class="fas fa-pen-nib fa-2x"></i></a></div>
+                <div><a href="#" onclick='updateChoice("white")'><i class="fas fa-eraser fa-2x"></i></a></div>
+                <div><a href='#' onclick='updateStyle("highlighter");updateChoice("black");'><i class="fas fa-highlighter fa-2x"></i></a></div>
+            </div>
+            <div class='colorPalette'>
+                <div class='palette' title="Color Palette">
+                    <button class='colorBox' id='black' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[0].id)'></button>
+                    <button class='colorBox' id='white' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[1].id)'></button>
+                    <button class='colorBox' id='red' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[2].id)'></button>
+                    <button class='colorBox' id='orange' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[3].id)'></button>
+                    <button class='colorBox' id='green' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[4].id)'></button>
+                    <button class='colorBox' id='yellow' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[5].id)'></button>
+                    <button class='colorBox' id='blue' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[6].id)'></button>
+                    <button class='colorBox' id='royalblue' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[7].id)'></button>
+                    <button class='colorBox' id='purple' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[8].id)'></button>
+                    <button class='colorBox' id='magenta' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[9].id)'></button>
+                    <button class='colorBox' id='pink' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[10].id)'></button>
+                    <button class='colorBox' id='skyblue' onclick = 'updateChoice(document.getElementsByClassName("colorBox")[11].id)'></button>
+                </div>
+                <div class="inputHere">
+                    <input type='text' value='#2a9d8f' name='colorCode' id='colorCode'>
+                    <button id='showColor' style='width:30px;height:30px;margin:5px' onclick='updateColor();updateChoice(document.getElementById("colorCode").value)'></button>
+                </div>
+                <div class='credits'>@prakarsh.dev</div>
+            </div>    
+        </div>
+        <div class="mainArea">
+            <canvas id='paintArea'></canvas>
+        </div>
+
+        
+    </div>
+
+    <script type="text/javascript">
+        //For sidepane
+        var colorBoxes = document.getElementsByClassName('colorBox');
+        for (var i = 0; i<colorBoxes.length;i++) {
+            var colorbg = colorBoxes[i].id;
+            colorBoxes[i].style.background=colorbg;
+            colorBoxes[i].style.border='2px solid '+colorbg;
+        }
+        var newColor = document.getElementById('colorCode').value;
+        document.getElementById('showColor').style.background=newColor;
+        document.getElementById('showColor').style.border='2px solid '+newColor;
+        
+        function updateColor () {
+            var newColor = document.getElementById('colorCode').value;
+            document.getElementById('showColor').style.background=newColor;
+            document.getElementById('showColor').style.border='2px solid '+newColor;
+        }
+    </script>
+    <script type="text/javascript">
+        //For canvas
+        var step = 2;
+        var w = 1920;
+        var h = 1080;
+
+        var node_map = new Map();
+        var canvasId = 'paintArea';
+        var myCanvas = document.getElementById(canvasId);
+        myCanvas.addEventListener('click', handleClick);
+        var ctx = myCanvas.getContext('2d');
+       	
+        myCanvas.width=w;
+        myCanvas.height=h;
+
+        var penStyle='pen';
+
+        var presentChoice='black';
+
+        function updateChoice(newChoice) {
+            presentChoice = newChoice;
+        }
+
+        function updateStyle(newChoice) {
+        	penStyle = newChoice;
+        }
+        function colorBlock(x,y) {
+            var col = Math.floor(x/step);
+            var row = Math.floor(y/step);
+            if (penStyle === 'pen') {
+	            ctx.fillStyle=presentChoice;
+	            ctx.fillRect(col*step,row*step,step,step);
+	        }
+
+	        if (penStyle === 'highlighter') {
+	        	ctx.fillStyle=presentChoice;
+	            ctx.fillRect(col*step,row*step,step,step);
+
+	            ctx.fillStyle=presentChoice;
+	            ctx.fillRect((col-1)*step,(row+1)*step,step,step);
+
+	            ctx.fillStyle=presentChoice;
+	            ctx.fillRect((col+1)*step,(row-1)*step,step,step);
+	        }
+        }        
+
+        function handleClick(e) {
+            colorBlock(e.offsetX,e.offsetY);
+        }
+        myCanvas.onmousedown = function(event) {
+                h_count = 0;
+                
+                function onMouseMove(event) {
+                    colorBlock(event.pageX, event.pageY);   
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                myCanvas.onmouseup = function() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    if(h_count > 2){
+                        window.addEventListener('click',captureClick,true); 
+                    }
+                    myCanvas.onmouseup = null;
+                };
+            };
+
+        function captureClick(e) {
+            e.stopPropagation(); 
+            window.removeEventListener('click', captureClick, true); 
+        }
+    </script>
+</body>
+</html>
